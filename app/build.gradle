@@ -1,0 +1,20 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'dev.ruuuberth.forkgramresolver.test'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'dev.ruuuberth.forkgramresolver.test'
+        minSdk 23
+        versionCode 1
+        versionName '0.1.0'
+    }
+}
+
+dependencies {
+    implementation project(':resolver')
+    compileOnly 'de.robv.android.xposed:api:82'
+}
