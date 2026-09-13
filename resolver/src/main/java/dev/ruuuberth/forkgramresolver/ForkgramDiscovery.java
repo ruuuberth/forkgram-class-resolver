@@ -18,14 +18,22 @@ public final class ForkgramDiscovery {
             ForkgramClassResolver.Candidate c = result.selected;
             Log.i(TAG, "Selected owner=" + c.owner.getName()
                     + " method=" + c.method.getName() + " score=" + c.score);
+            logEvidence(c);
         } else {
             Log.w(TAG, "Discovery failed: " + result.reason
                     + " candidates=" + result.candidates.size());
             for (ForkgramClassResolver.Candidate c : result.candidates) {
                 Log.d(TAG, "candidate owner=" + c.owner.getName()
                         + " method=" + c.method.getName() + " score=" + c.score);
+                logEvidence(c);
             }
         }
         return result;
+    }
+
+    private static void logEvidence(ForkgramClassResolver.Candidate candidate) {
+        for (String evidence : candidate.evidence) {
+            Log.d(TAG, "  evidence: " + evidence);
+        }
     }
 }
