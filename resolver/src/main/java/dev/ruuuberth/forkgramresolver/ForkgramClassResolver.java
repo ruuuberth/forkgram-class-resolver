@@ -43,13 +43,28 @@ public final class ForkgramClassResolver {
             for (Method method : safeMethods(type)) {
                 if (!hasUpdateProcessorSignature(method)) continue;
 
+                List<String> evidence = new ArrayList<>();
                 int score = 100;
-                score += hasUpdateLikeCollection(type, method) ? 45 : 0;
-                score += hasTelegramDomainParameters(type) ? 25 : 0;
-                score += hasControllerShape(type) ? 20 : 0;
-                score += Modifier.isStatic(method.getModifiers()) ? 5 : 0;
+                evidence.add("5-parameter update-processor shape (+100)");
 
-                candidates.add(new Candidate(type, method, score));
+                if (hasUpdateLikeCollection(type, method)) {
+                    score += 45;
+                    evidence.add("same owner consumes TL/message-domain types (+45)");
+                }
+                if (hasTelegramDomainParameters(type)) {
+                    score += 25;
+                    evidence.add("same owner references Telegram TL domain (+25)");
+                }
+                if (hasControllerShape(type)) {
+                    score += 20;
+                    evidence.add("same owner has controller/storage infrastructure (+20)");
+                }
+                if (Modifier.isStatic(method.getModifiers())) {
+                    score += 5;
+                    evidence.add("processor is static (+5)");
+                }
+
+                candidates.add(new Candidate(type, method, score, evidence));
             }
         }
 
@@ -73,6 +88,11 @@ public final class ForkgramClassResolver {
     private static boolean hasUpdateProcessorSignature(Method method) {
         Class<?>[] p = method.getParameterTypes();
         if (p.length != 5) return false;
+
+        // This is intentionally structural. The first three parameters are
+        // expected to be ArrayList in known Telegram/Forkgram builds, while
+        // accepting List subtypes keeps the resolver tolerant of compiler or
+        // fork changes until runtime evidence lets us tighten this fingerprint.
         return isListLike(p[0]) && isListLike(p[1]) && isListLike(p[2])
                 && p[3] == boolean.class && p[4] == int.class;
     }
@@ -173,11 +193,13 @@ public final class ForkgramClassResolver {
         public final Class<?> owner;
         public final Method method;
         public final int score;
+        public final List<String> evidence;
 
-        Candidate(Class<?> owner, Method method, int score) {
+        Candidate(Class<?> owner, Method method, int score, List<String> evidence) {
             this.owner = owner;
             this.method = method;
             this.score = score;
+            this.evidence = evidence;
         }
     }
 
